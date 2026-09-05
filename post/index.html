@@ -138,14 +138,20 @@ function openInApp(e) {
 
   // iOS وبقية المتصفحات: نجرّب السكيم الخاص، فإن بقيت الصفحة ظاهرة
   // بعد لحظة فالتطبيق غير منصّب وننتقل إلى المتجر. أما إن نجح الفتح
-  // فتصير الصفحة مخفية فنلغي التحويل حتى لا يُفتح المتجر خلف التطبيق.
+  // فتغادر الصفحةُ المقدمةَ فنلغي التحويل حتى لا يُفتح المتجر خلف التطبيق.
   var t = setTimeout(function () {
     if (!document.hidden) location.href = storeUrl;
-  }, 1500);
+  }, 2000);
 
+  function cancel() { clearTimeout(t); }
+
+  // نراقب أكثر من إشارة: بعض إصدارات سفاري لا تُطلق visibilitychange
+  // عند مغادرة الصفحة إلى تطبيق آخر، لكنها تُطلق pagehide أو blur.
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) clearTimeout(t);
+    if (document.hidden) cancel();
   }, { once: true });
+  window.addEventListener('pagehide', cancel, { once: true });
+  window.addEventListener('blur', cancel, { once: true });
 
   location.href = 'myphone://' + PATH + '/' + encodeURIComponent(id);
 }
