@@ -109,22 +109,36 @@ var SUPABASE_KEY = 'sb_publishable_vj0f6ZYilzUMeR7plW1OcQ_Wk_11d0e';
 var PLAY  = 'https://play.google.com/store/apps/details?id=com.myphone1.app';
 var APPLE = 'https://apps.apple.com/app/myphone/id6802761630';
 
-var ua      = navigator.userAgent || '';
-var isIOS   = /iPad|iPhone|iPod/.test(ua) ||
-              (ua.indexOf('Mac') > -1 && 'ontouchend' in document);
+var PKG  = 'com.myphone1.app';
+var PATH = 'store';
+
+var ua       = navigator.userAgent || '';
+var isIOS    = /iPad|iPhone|iPod/.test(ua) ||
+               (ua.indexOf('Mac') > -1 && 'ontouchend' in document);
+var isAndroid = /Android/i.test(ua);
 var storeUrl = isIOS ? APPLE : PLAY;
 
 var id = new URLSearchParams(location.search).get('id') || '';
 var root = document.getElementById('root');
 
 // ─── زر "فتح بالتطبيق" ─────────────────────────────────────────
-// نحاول فتح السكيم الخاص؛ إن لم يكن التطبيق منصّباً تبقى الصفحة
-// ظاهرة فننتقل إلى المتجر. ولو نجح الفتح تصير الصفحة مخفية
-// فنلغي الانتقال حتى لا يفتح المتجر خلف التطبيق.
 function openInApp(e) {
   if (e) e.preventDefault();
   if (!id) { location.href = storeUrl; return; }
 
+  // أندرويد: صيغة intent:// هي الطريقة الرسمية التي يفهمها كروم،
+  // وتتكفّل بنفسها بالتحويل إلى المتجر عند غياب التطبيق.
+  if (isAndroid) {
+    location.href =
+      'intent://' + PATH + '/' + encodeURIComponent(id) +
+      '#Intent;scheme=myphone;package=' + PKG +
+      ';S.browser_fallback_url=' + encodeURIComponent(storeUrl) + ';end';
+    return;
+  }
+
+  // iOS وبقية المتصفحات: نجرّب السكيم الخاص، فإن بقيت الصفحة ظاهرة
+  // بعد لحظة فالتطبيق غير منصّب وننتقل إلى المتجر. أما إن نجح الفتح
+  // فتصير الصفحة مخفية فنلغي التحويل حتى لا يُفتح المتجر خلف التطبيق.
   var t = setTimeout(function () {
     if (!document.hidden) location.href = storeUrl;
   }, 1500);
@@ -133,7 +147,7 @@ function openInApp(e) {
     if (document.hidden) clearTimeout(t);
   }, { once: true });
 
-  location.href = 'myphone://store/' + encodeURIComponent(id);
+  location.href = 'myphone://' + PATH + '/' + encodeURIComponent(id);
 }
 document.getElementById('openApp').addEventListener('click', openInApp);
 
