@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["ضع_هنا_TEAM_ID.com.myphone1.app"],
+        "components": [
+          { "/": "/post/*", "comment": "صفحة إعلان" },
+          { "/": "/store/*", "comment": "صفحة متجر" }
+        ]
+      }
+    ]
+  }
+}

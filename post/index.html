@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Phone — إعلان</title>
+
+<!-- شريط آبل الذكي: يظهر تلقائياً على سفاري في الآيفون -->
+<meta name="apple-itunes-app" content="app-id=6802761630">
+
+<style>
+  :root {
+    color-scheme: light dark;
+    --primary: #6C5CE7;
+    --bg: #f5f3fa;
+    --card: #ffffff;
+    --text: #1a1a22;
+    --sub: #6b6b7b;
+    --border: #e8e3f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121118; --card: #1c1b23; --text: #f3f2f7;
+      --sub: #9c9aab; --border: #2c2a36;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, "Segoe UI", Tahoma, sans-serif;
+    display: flex; flex-direction: column; min-height: 100vh;
+  }
+
+  /* شريط "افتح بالتطبيق" العلوي */
+  .appbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .appbar .logo {
+    width: 42px; height: 42px; border-radius: 11px; flex: none;
+    background: var(--primary); color: #fff; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; font-size: 17px;
+  }
+  .appbar .txt { flex: 1; min-width: 0; }
+  .appbar .txt b { display: block; font-size: 14px; }
+  .appbar .txt span { font-size: 12px; color: var(--sub); }
+  .appbar a {
+    flex: none; background: var(--primary); color: #fff;
+    text-decoration: none; font-weight: 700; font-size: 13px;
+    padding: 9px 16px; border-radius: 10px; white-space: nowrap;
+  }
+
+  main { flex: 1; width: 100%; max-width: 520px; margin: 0 auto; padding: 16px; }
+
+  .photo {
+    width: 100%; aspect-ratio: 1/1; object-fit: cover;
+    border-radius: 18px; background: var(--border); display: block;
+  }
+  .body { padding: 18px 4px 0; }
+  .price { font-size: 25px; font-weight: 800; color: var(--primary); margin: 0 0 4px; }
+  h1 { font-size: 19px; margin: 0 0 10px; font-weight: 700; }
+  .meta { font-size: 13.5px; color: var(--sub); margin: 0 0 16px; }
+
+  .specs {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    margin-bottom: 22px;
+  }
+  .specs div {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 13px; padding: 12px 6px; text-align: center;
+  }
+  .specs b { display: block; font-size: 14px; }
+  .specs span { font-size: 11.5px; color: var(--sub); }
+
+  .cta {
+    display: block; text-align: center; text-decoration: none;
+    background: var(--primary); color: #fff; font-weight: 700; font-size: 15.5px;
+    padding: 15px; border-radius: 15px; margin-bottom: 10px;
+  }
+  .cta.alt {
+    background: transparent; color: var(--primary);
+    border: 1.5px solid var(--primary);
+  }
+  .state { text-align: center; padding: 70px 20px; color: var(--sub); font-size: 14.5px; }
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="logo">My</div>
+  <div class="txt">
+    <b>تطبيق My Phone</b>
+    <span>تصفّح أسرع وتواصل مباشر مع البائع</span>
+  </div>
+  <a id="openApp" href="#">فتح بالتطبيق</a>
+</div>
+
+<main id="root"><div class="state">جارٍ التحميل…</div></main>
+
+<script>
+// ─── الإعدادات ─────────────────────────────────────────────────
+// المفتاح العام (anon) مُصمَّم ليكون علنياً؛ الحماية عبر سياسات RLS
+// التي تسمح بقراءة الإعلانات المعتمدة فقط.
+var SUPABASE_URL = 'https://animipdgnhwidkseihyd.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_vj0f6ZYilzUMeR7plW1OcQ_Wk_11d0e';
+
+var PLAY  = 'https://play.google.com/store/apps/details?id=com.myphone1.app';
+var APPLE = 'https://apps.apple.com/app/myphone/id6802761630';
+
+var ua      = navigator.userAgent || '';
+var isIOS   = /iPad|iPhone|iPod/.test(ua) ||
+              (ua.indexOf('Mac') > -1 && 'ontouchend' in document);
+var storeUrl = isIOS ? APPLE : PLAY;
+
+var id = new URLSearchParams(location.search).get('id') || '';
+var root = document.getElementById('root');
+
+// ─── زر "فتح بالتطبيق" ─────────────────────────────────────────
+// نحاول فتح السكيم الخاص؛ إن لم يكن التطبيق منصّباً تبقى الصفحة
+// ظاهرة فننتقل إلى المتجر. ولو نجح الفتح تصير الصفحة مخفية
+// فنلغي الانتقال حتى لا يفتح المتجر خلف التطبيق.
+function openInApp(e) {
+  if (e) e.preventDefault();
+  if (!id) { location.href = storeUrl; return; }
+
+  var t = setTimeout(function () {
+    if (!document.hidden) location.href = storeUrl;
+  }, 1500);
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) clearTimeout(t);
+  }, { once: true });
+
+  location.href = 'myphone://post/' + encodeURIComponent(id);
+}
+document.getElementById('openApp').addEventListener('click', openInApp);
+
+// ─── جلب الإعلان وعرضه ─────────────────────────────────────────
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+
+function money(n) {
+  return (Number(n) || 0).toLocaleString('en-US');
+}
+
+function render(l) {
+  document.title = esc(l.brand + ' ' + l.model) + ' — My Phone';
+
+  var img = (l.images && l.images.length) ? l.images[0] : '';
+  var specs = [
+    [l.storage_gb ? l.storage_gb + 'GB' : '—', 'الذاكرة'],
+    [l.condition || '—', 'الحالة'],
+    [l.governorate || '—', 'المحافظة']
+  ].map(function (s) {
+    return '<div><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div>';
+  }).join('');
+
+  root.innerHTML =
+    (img ? '<img class="photo" src="' + esc(img) + '" alt="">' : '') +
+    '<div class="body">' +
+      '<p class="price">' + money(l.price_iqd) + ' د.ع</p>' +
+      '<h1>' + esc(l.brand) + ' ' + esc(l.model) + '</h1>' +
+      '<p class="meta">' + esc(l.governorate || '') + '</p>' +
+      '<div class="specs">' + specs + '</div>' +
+      '<a class="cta" id="cta1" href="#">فتح الإعلان في التطبيق</a>' +
+      '<a class="cta alt" href="' + storeUrl + '">تحميل التطبيق</a>' +
+    '</div>';
+
+  document.getElementById('cta1').addEventListener('click', openInApp);
+}
+
+function fallback(msg) {
+  root.innerHTML =
+    '<div class="state">' + esc(msg) + '</div>' +
+    '<a class="cta" href="' + storeUrl + '">تحميل تطبيق My Phone</a>';
+}
+
+if (!id) {
+  fallback('رابط غير صالح.');
+} else {
+  fetch(SUPABASE_URL + '/rest/v1/listings?select=*&id=eq.' +
+        encodeURIComponent(id) + '&status=eq.approved', {
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (rows) {
+      if (rows && rows.length) render(rows[0]);
+      else fallback('هذا الإعلان لم يعد متاحاً.');
+    })
+    .catch(function () { fallback('تعذّر تحميل الإعلان.'); });
+}
+</script>
+</body>
+</html>
