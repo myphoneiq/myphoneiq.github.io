@@ -13,6 +13,12 @@
 `AndroidManifest.xml` و `ios/Runner/Info.plist`، فلا يحتاج أي تحقق من
 جوجل أو آبل ولا أي بيانات من حسابات النشر.
 
+## سياسة الخصوصية
+
+`privacy/index.html` ← `https://myphoneiq.github.io/privacy/`، وهو الرابط الذي
+يُسجَّل في App Store Connect و Google Play Console. نُقلت إلى هنا من مستودع
+`myphone-privacy` المستقل ليبقى الموقع كله في مستودع واحد.
+
 ## النشر
 
 1. أنشئ منظمة (Organization) مجانية على GitHub باسم قصير، مثل `myphone-iq`.
